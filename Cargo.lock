@@ -119,6 +119,7 @@ dependencies = [
  "heapless",
  "panic-probe",
  "portable-atomic",
+ "smart-leds",
  "static_cell",
 ]
 

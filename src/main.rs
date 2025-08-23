@@ -5,10 +5,13 @@ use assign_resources::assign_resources;
 use embassy_executor::Spawner;
 use embassy_rp::config::Config;
 use embassy_rp::i2c::{self, I2c};
-use embassy_rp::peripherals::{self, I2C0, UART0, UART1};
+use embassy_rp::peripherals::{self, I2C0, PIO0, UART0, UART1};
+use embassy_rp::pio::Pio;
+use embassy_rp::pio_programs::ws2812::{PioWs2812, PioWs2812Program};
 use embassy_rp::uart::{self, BufferedInterruptHandler, BufferedUart};
 use embassy_rp::{bind_interrupts, Peri};
 use emc2101::EMC2101;
+use smart_leds::RGB8;
 use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
 
@@ -17,6 +20,7 @@ bind_interrupts!(struct Irqs {
     I2C0_IRQ => embassy_rp::i2c::InterruptHandler<I2C0>;
     UART0_IRQ => BufferedInterruptHandler<UART0>;
     UART1_IRQ => BufferedInterruptHandler<UART1>;
+    PIO0_IRQ_0 => embassy_rp::pio::InterruptHandler<PIO0>;
 });
 
 assign_resources! {
@@ -42,6 +46,11 @@ assign_resources! {
     led: LedRes {
         led: PIN_25,
     },
+    pixel: NeoPixelRes {
+        pio: PIO0,
+        led: PIN_15,
+        dma: DMA_CH0,
+    },
     uart0: Uart0Res {
         tx: PIN_0,
         rx: PIN_1,
@@ -58,6 +67,15 @@ assign_resources! {
 async fn main(_spawner: Spawner) {
     let p = embassy_rp::init(Config::default());
     let r = split_resources! {p};
+
+    // init neopixel
+    let Pio { mut common, sm0, .. } = Pio::new(r.pixel.pio, Irqs);
+    let data = [RGB8::default(); 2];
+    let program = PioWs2812Program::new(&mut common);
+    let mut ws2812 = PioWs2812::<PIO0, 0, 2>::new(&mut common, sm0, r.pixel.dma, r.pixel.led, &program);
+
+    // neopixel example usage for future reference
+    ws2812.write(&data).await;
 
     // init uart0
     static TX_BUF: StaticCell<[u8; 16]> = StaticCell::new();
