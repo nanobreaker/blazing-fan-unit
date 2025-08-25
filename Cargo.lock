@@ -116,6 +116,7 @@ dependencies = [
  "embedded-hal-bus",
  "embedded-io-async",
  "emc2101",
+ "fugit",
  "heapless",
  "panic-probe",
  "portable-atomic",
