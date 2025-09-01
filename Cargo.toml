@@ -17,21 +17,22 @@ embedded-hal-async = "1.0"
 embedded-hal-bus = { version = "0.1", features = ["async"] }
 embedded-io-async = { version = "0.6.1", features = ["defmt-03"] }
 
-emc2101 = { version = "1.0.0", features = ["async", "defmt-03"] }
+emc2101 = { version = "2.0.1", features = ["async", "defmt"] }
 
 assign-resources = { git = "https://github.com/adamgreig/assign-resources", rev = "bd22cb7a92031fb16f74a5da42469d466c33383e" }
+bounded-integer = "0.6.0"
 byte-slice-cast = { version = "1.2.0", default-features = false }
 cortex-m = { version = "0.7.6", features = ["inline-asm"] }
 cortex-m-rt = "0.7"
 critical-section = "1.1"
 defmt = "1.0.1"
 defmt-rtt = "1.0.0"
+fugit = "0.3.7"
 heapless = "0.8"
 panic-probe = { version = "1.0.0", features = ["print-defmt"] }
 portable-atomic = { version = "1.5", features = ["critical-section"] }
 smart-leds = "0.4.0"
 static_cell = "2.1"
-fugit = "0.3.7"
 
 [profile.dev]
 debug = 2

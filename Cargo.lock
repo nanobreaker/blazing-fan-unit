@@ -99,6 +99,7 @@ name = "blazing-fan-unit"
 version = "0.1.0"
 dependencies = [
  "assign-resources",
+ "bounded-integer",
  "byte-slice-cast",
  "cortex-m",
  "cortex-m-rt",
@@ -117,7 +118,7 @@ dependencies = [
  "embedded-io-async",
  "emc2101",
  "fugit",
- "heapless",
+ "heapless 0.8.0",
  "panic-probe",
  "portable-atomic",
  "smart-leds",
@@ -132,6 +133,12 @@ checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
 dependencies = [
  "generic-array",
 ]
+
+[[package]]
+name = "bounded-integer"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44c9c9004ccb053345b305c7bf142e2b5a6d4366b73f389585bdc1b202a7209d"
 
 [[package]]
 name = "byte-slice-cast"
@@ -469,7 +476,7 @@ dependencies = [
  "embedded-io-async",
  "futures-core",
  "futures-sink",
- "heapless",
+ "heapless 0.8.0",
 ]
 
 [[package]]
@@ -505,7 +512,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59b742d6fec7afcfa77c91b476520627151da3735fca6373b287c4c94b69e171"
 dependencies = [
  "embassy-executor",
- "heapless",
+ "heapless 0.8.0",
 ]
 
 [[package]]
@@ -600,15 +607,16 @@ dependencies = [
 
 [[package]]
 name = "emc2101"
-version = "1.0.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "804db9b11e75e89411f82d3eb3fd5911e1fc389908aa632c3d00b465e99783ad"
+checksum = "26c786163acb9d4a7a1ec806d4127d3dfbf0951a1d964fa7f1ab4ab8c0af806f"
 dependencies = [
- "defmt 0.3.100",
+ "bounded-integer",
+ "defmt 1.0.1",
  "embedded-hal 1.0.0",
  "embedded-hal-async",
  "fugit",
- "heapless",
+ "heapless 0.9.1",
  "maybe-async-cfg",
  "rustversion",
 ]
@@ -739,7 +747,17 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0bfb9eb618601c89945a70e254898da93b13be0388091d42117462b265bb3fad"
 dependencies = [
- "defmt 0.3.100",
+ "hash32",
+ "stable_deref_trait",
+]
+
+[[package]]
+name = "heapless"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1edcd5a338e64688fbdcb7531a846cfd3476a54784dcb918a0844682bc7ada5"
+dependencies = [
+ "defmt 1.0.1",
  "hash32",
  "stable_deref_trait",
 ]

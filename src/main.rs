@@ -2,6 +2,7 @@
 #![no_main]
 
 use assign_resources::assign_resources;
+use bounded_integer::BoundedU8;
 use embassy_executor::Spawner;
 use embassy_rp::config::Config;
 use embassy_rp::gpio::{Input, Output, Pull};
@@ -11,10 +12,10 @@ use embassy_rp::pio::Pio;
 use embassy_rp::pio_programs::ws2812::{PioWs2812, PioWs2812Program};
 use embassy_rp::uart::{self, BufferedInterruptHandler, BufferedUart};
 use embassy_rp::{bind_interrupts, Peri};
-use embassy_time::{Duration, Ticker, Timer};
+use embassy_time::{Duration, Ticker};
+use embedded_io_async::Read;
 use emc2101::EMC2101;
 use fugit::Rate;
-use heapless::Vec;
 use smart_leds::RGB8;
 use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
@@ -84,11 +85,11 @@ async fn main(_spawner: Spawner) {
     let mut ws2812 = PioWs2812::<PIO0, 0, 2>::new(&mut pio.common, pio.sm0, r.pixel.dma, r.pixel.led, &program);
 
     // init uart0
-    // static TX_BUF: StaticCell<[u8; 16]> = StaticCell::new();
-    // static RX_BUF: StaticCell<[u8; 16]> = StaticCell::new();
-    // let tx_buf = &mut TX_BUF.init([0; 16])[..];
-    // let rx_buf = &mut RX_BUF.init([0; 16])[..];
-    // let _uart0 = BufferedUart::new(r.uart0.uart, r.uart0.tx, r.uart0.rx, Irqs, tx_buf, rx_buf, uart::Config::default());
+    static TX_BUF: StaticCell<[u8; 16]> = StaticCell::new();
+    static RX_BUF: StaticCell<[u8; 16]> = StaticCell::new();
+    let tx_buf = &mut TX_BUF.init([0; 16])[..];
+    let rx_buf = &mut RX_BUF.init([0; 16])[..];
+    let _uart0 = BufferedUart::new(r.uart0.uart, r.uart0.tx, r.uart0.rx, Irqs, tx_buf, rx_buf, uart::Config::default());
 
     // init fan power
     let _fan_pwr = Output::new(r.fan.pwr, embassy_rp::gpio::Level::High);
@@ -110,7 +111,7 @@ async fn main(_spawner: Spawner) {
     let mut data = [RGB8::new(128, 0, 0); 2];
     let mut ticker = Ticker::every(Duration::from_secs(1));
     let mut mode = Mode::Auto;
-    let mut power = 0x00;
+    let mut power = <BoundedU8<0, 63>>::new(0).unwrap();
 
     loop {
         defmt::info!("tick passed");
@@ -128,8 +129,8 @@ async fn main(_spawner: Spawner) {
         };
 
         power = match mode {
-            Mode::Auto => 0,
-            Mode::Manual => 99,
+            Mode::Auto => <BoundedU8<0, 63>>::new(0).unwrap(),
+            Mode::Manual => <BoundedU8<0, 63>>::new(63).unwrap(),
         };
 
         emc.set_fan_power(power).unwrap();
@@ -152,5 +153,35 @@ async fn main(_spawner: Spawner) {
         }
 
         ticker.next().await;
+    }
+}
+
+#[embassy_executor::task]
+async fn mode_switcher(mut button: Input<'static>, mode: &'static mut Mode) {
+    loop {
+        button.wait_for_rising_edge().await;
+
+        *mode = match mode {
+            Mode::Auto => Mode::Manual,
+            Mode::Manual => Mode::Auto,
+            // Mode::Manual => Mode::Off,
+            // Mode::Off => Mode::Auto,
+        };
+    }
+}
+
+#[embassy_executor::task]
+async fn blade0_listener(uart0: &'static mut BufferedUart) {
+    loop {
+        let mut buf = [0u8; 3];
+        uart0.read_exact(&mut buf).await.unwrap();
+    }
+}
+
+#[embassy_executor::task]
+async fn blade1_listener(uart1: &'static mut BufferedUart) {
+    loop {
+        let mut buf = [0u8; 3];
+        uart1.read_exact(&mut buf).await.unwrap();
     }
 }
